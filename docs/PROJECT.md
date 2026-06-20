@@ -3,8 +3,8 @@
 _Documentazione generata automaticamente da ArchMind._
 
 - **Radice**: `.`
-- **File analizzati**: 91
-- **Righe di codice**: 11153
+- **File analizzati**: 87
+- **Righe di codice**: 5484
 
 ## Composizione
 
@@ -16,7 +16,7 @@ _Documentazione generata automaticamente da ArchMind._
 | `icns` | 1 |
 | `ico` | 1 |
 | `js` | 5 |
-| `json` | 9 |
+| `json` | 5 |
 | `lock` | 1 |
 | `md` | 3 |
 | `mmd` | 5 |
