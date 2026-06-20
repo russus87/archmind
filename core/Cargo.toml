@@ -1,0 +1,21 @@
+# Crate "core": tutta la logica di analisi, riutilizzabile e senza Tauri.
+# Solo dipendenze pure-Rust (niente librerie di sistema) per pacchettizzare
+# senza attriti su Linux, Windows e macOS.
+[package]
+name = "archmind-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# YAML per Docker Compose, manifest Kubernetes e OpenAPI in formato yaml.
+serde_yaml = "0.9"
+# Attraversamento ricorsivo della cartella di progetto.
+walkdir = "2"
+# Estrazione euristica di simboli (classi, package, import, DDL) dal sorgente.
+regex = "1"
+thiserror = "2"
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=ArchMind
+Comment=Analisi automatica di progetti software e generazione documentazione tecnica
+Exec=archmind
+Icon=archmind
+Terminal=false
+Categories=Development;IDE;Documentation;
+Keywords=architettura;documentazione;reverse-engineering;diagrammi;uml;dipendenze;

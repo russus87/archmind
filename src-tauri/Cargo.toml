@@ -1,0 +1,29 @@
+[package]
+name = "archmind"
+version = "0.1.0"
+description = "ArchMind - analisi automatica di progetti software e generazione documentazione"
+authors = ["Antonio Russo"]
+license = "MIT"
+repository = "https://github.com/russus87/archmind"
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "archmind_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+log = "0.4"
+tauri = { version = "2", features = [] }
+tauri-plugin-log = "2"
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-notification = "2"
+tauri-plugin-process = "2"
+# La logica vera (analisi, documentazione, diagrammi) vive nel crate "core".
+archmind-core = { path = "../core" }

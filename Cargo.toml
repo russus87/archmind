@@ -1,0 +1,6 @@
+# Workspace Cargo di ArchMind: la logica di analisi (core) e l'app desktop (src-tauri).
+# Stessa struttura di GlyphBox/Oxiterm: il "core" e' Rust puro e non dipende da Tauri,
+# cosi' tutta l'analisi resta riutilizzabile (anche da una CLI o un server headless).
+[workspace]
+members = ["core", "src-tauri"]
+resolver = "2"
