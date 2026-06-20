@@ -33,13 +33,17 @@ pub fn analyze(root: &str) -> Result<Project> {
     let mut project = Project::new(root, name);
 
     // Raccoglie tutti i file una volta sola e li passa agli analyzer.
-    let files: Vec<_> = WalkDir::new(root_path)
+    // L'ordinamento rende l'analisi (e quindi la documentazione generata)
+    // deterministica a prescindere dall'ordine del filesystem: indispensabile
+    // per il confronto "docs-as-code" in CI.
+    let mut files: Vec<_> = WalkDir::new(root_path)
         .into_iter()
         .filter_entry(|e| !is_skipped(e.path()))
         .filter_map(|e| e.ok())
         .filter(|e| e.file_type().is_file())
         .map(|e| e.into_path())
         .collect();
+    files.sort();
 
     analyzers::stats::collect(&mut project, &files);
     analyzers::git::collect(&mut project, root_path);

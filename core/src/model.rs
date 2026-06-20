@@ -149,6 +149,8 @@ pub enum RelationKind {
     Exposes,
     References,
     Contains,
+    /// Un tipo chiama un metodo che appartiene a un altro tipo (call graph).
+    Calls,
 }
 
 /// Un arco generico del grafo di conoscenza.

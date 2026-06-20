@@ -15,8 +15,10 @@
 //! - [`search`]     ricerca full-text sugli elementi del progetto
 
 pub mod analyzers;
+pub mod assistant;
 pub mod diagrams;
 pub mod docs;
+pub mod index;
 pub mod model;
 pub mod project;
 pub mod search;
@@ -36,6 +38,10 @@ pub enum Error {
     },
     #[error("tipo di diagramma non supportato: {0}")]
     UnknownDiagram(String),
+    #[error("errore dell'indice di ricerca: {0}")]
+    Index(String),
+    #[error("errore dell'assistente LLM: {0}")]
+    Llm(String),
 }
 
 /// Alias comodo.

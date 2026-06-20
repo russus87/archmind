@@ -13,6 +13,7 @@ pub mod java;
 pub mod kubernetes;
 pub mod openapi;
 pub mod stats;
+pub mod treesitter;
 
 use std::path::Path;
 

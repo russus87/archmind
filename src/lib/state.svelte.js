@@ -10,4 +10,12 @@ export const store = $state({
   error: "",
   /// Scheda attiva nella sidebar.
   tab: "overview",
+  /// Configurazione del provider LLM per l'assistente.
+  provider: {
+    kind: "claude", // "claude" | "ollama"
+    api_key: "",
+    model: "claude-opus-4-8",
+    host: "http://localhost:11434",
+    ollamaModel: "llama3.1",
+  },
 });

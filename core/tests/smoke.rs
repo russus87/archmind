@@ -72,3 +72,57 @@ fn analizza_un_progetto_minimo() {
     let hits = archmind_core::search::search(&p, "orders");
     assert!(!hits.is_empty(), "ricerca senza risultati");
 }
+
+/// Verifica che tree-sitter estragga metodi e ricostruisca le chiamate
+/// tra tipi (relazione `Calls`).
+#[test]
+fn estrae_grafo_chiamate_csharp() {
+    use archmind_core::model::RelationKind;
+
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+
+    fs::write(
+        root.join("Repo.cs"),
+        "namespace Shop;\npublic class Repository { public void Save() {} }",
+    )
+    .unwrap();
+    fs::write(
+        root.join("Service.cs"),
+        "namespace Shop;\npublic class Service {\n  private Repository repo;\n  public void Handle() { repo.Save(); }\n}",
+    )
+    .unwrap();
+
+    let p = archmind_core::project::analyze(root.to_str().unwrap()).unwrap();
+
+    let service = p.components.iter().find(|c| c.name == "Service").expect("manca Service");
+    assert!(service.members.contains(&"Handle".to_string()), "metodo non estratto");
+
+    // Service.Handle() chiama Repository.Save() -> arco Calls.
+    assert!(
+        p.relations
+            .iter()
+            .any(|r| r.kind == RelationKind::Calls && r.from == "cs:Service" && r.to == "cs:Repository"),
+        "manca l'arco Calls Service -> Repository"
+    );
+}
+
+/// Verifica che l'indice tantivy recuperi passaggi rilevanti (base del RAG).
+#[test]
+fn indice_recupera_passaggi() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    fs::write(
+        root.join("Payment.cs"),
+        "namespace Billing;\npublic class PaymentProcessor { public void Charge() {} }",
+    )
+    .unwrap();
+
+    let p = archmind_core::project::analyze(root.to_str().unwrap()).unwrap();
+    let hits = archmind_core::index::retrieve(&p, "payment processor charge", 5).unwrap();
+    assert!(!hits.is_empty(), "il retrieval non ha trovato nulla");
+    assert!(
+        hits.iter().any(|h| h.location.contains("Payment.cs")),
+        "il file Payment.cs non è tra i risultati"
+    );
+}
