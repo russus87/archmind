@@ -20,6 +20,17 @@ tree-sitter-java = "0.23.5"
 tantivy = "0.26.1"
 ureq = { version = "3.3.0", features = ["json"] }
 ignore = "0.4.26"
+rusqlite = { version = "0.40.1", features = ["bundled"] }
+pulldown-cmark = { version = "0.13.4", default-features = false, features = ["html"] }
+genpdf = "0.2.0"
+postgres = "0.19.14"
+fastembed = { version = "5.17.2", optional = true }
 
 [dev-dependencies]
 tempfile = "3"
+
+[features]
+# Retrieval semantico locale via embeddings ONNX (fastembed). Off di default:
+# l'app e la CLI restano puro-Rust e la release multipiattaforma non cambia.
+# Abilitalo con:  cargo build --features embeddings
+embeddings = ["dep:fastembed"]

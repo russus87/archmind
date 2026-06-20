@@ -11,6 +11,7 @@
     { id: "er", label: "ER (Database)" },
     { id: "class", label: "Class Diagram" },
     { id: "sequence", label: "Sequence" },
+    { id: "flow", label: "Flusso (cross-layer)" },
   ];
 
   let kind = $state("dependency");

@@ -8,6 +8,7 @@
   import DocsView from "./components/DocsView.svelte";
   import SearchView from "./components/SearchView.svelte";
   import ChatView from "./components/ChatView.svelte";
+  import EvolutionView from "./components/EvolutionView.svelte";
 
   async function openProject() {
     const root = await pickFolder();
@@ -60,6 +61,8 @@
       <Tables kind="services" />
     {:else if store.tab === "database"}
       <Tables kind="database" />
+    {:else if store.tab === "evolution"}
+      <EvolutionView />
     {:else if store.tab === "diagrams"}
       <Diagrams />
     {:else if store.tab === "docs"}

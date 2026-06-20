@@ -16,6 +16,7 @@ pub fn render(p: &Project, kind: &str) -> Result<String> {
         "er" => Ok(er(p)),
         "class" => Ok(class(p)),
         "sequence" => Ok(sequence(p)),
+        "flow" => Ok(flow(p)),
         other => Err(Error::UnknownDiagram(other.to_string())),
     }
 }
@@ -130,6 +131,66 @@ fn class(p: &Project) -> String {
         if let (Some(from), Some(to)) = (by_id.get(r.from.as_str()), by_id.get(r.to.as_str())) {
             let _ = writeln!(s, "  {} ..> {} : calls", id(from), id(to));
         }
+    }
+    s
+}
+
+/// Flusso applicativo: endpoint → componente che lo gestisce → tabella usata.
+/// Si basa sulle relazioni Exposes (componente→endpoint) e References
+/// (componente→tabella) prodotte dal linking cross-layer.
+fn flow(p: &Project) -> String {
+    let mut s = String::from("graph LR\n");
+
+    // Etichette leggibili per id.
+    let mut label: std::collections::HashMap<&str, String> = std::collections::HashMap::new();
+    for c in &p.components {
+        label.insert(c.id.as_str(), c.name.clone());
+    }
+    for e in &p.endpoints {
+        label.insert(e.id.as_str(), format!("{} {}", e.method, e.path));
+    }
+    for t in &p.tables {
+        label.insert(t.id.as_str(), format!("⛁ {}", t.name));
+    }
+
+    let node = |id_: &str, lbl: &str| format!("  {}[\"{}\"]\n", id(id_), lbl);
+    let mut drawn = std::collections::HashSet::new();
+    let mut edges = 0;
+
+    for r in &p.relations {
+        let (from_lbl, to_lbl) = match (label.get(r.from.as_str()), label.get(r.to.as_str())) {
+            (Some(f), Some(t)) => (f, t),
+            _ => continue,
+        };
+        match r.kind {
+            // endpoint --> componente (Exposes va da componente a endpoint)
+            RelationKind::Exposes => {
+                if drawn.insert(r.to.clone()) {
+                    s.push_str(&node(&r.to, to_lbl));
+                }
+                if drawn.insert(r.from.clone()) {
+                    s.push_str(&node(&r.from, from_lbl));
+                }
+                s.push_str(&format!("  {} --> {}\n", id(&r.to), id(&r.from)));
+                edges += 1;
+            }
+            // componente --> tabella
+            RelationKind::References if r.to.starts_with("table:") => {
+                if drawn.insert(r.from.clone()) {
+                    s.push_str(&node(&r.from, from_lbl));
+                }
+                if drawn.insert(r.to.clone()) {
+                    s.push_str(&node(&r.to, to_lbl));
+                }
+                s.push_str(&format!("  {} --> {}\n", id(&r.from), id(&r.to)));
+                edges += 1;
+            }
+            _ => {}
+        }
+    }
+
+    if edges == 0 {
+        s.push_str("  empty[\"Nessun flusso cross-layer rilevato\"]\n");
     }
     s
 }

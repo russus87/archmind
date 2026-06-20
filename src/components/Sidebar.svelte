@@ -8,6 +8,7 @@
     { id: "api", label: "API" },
     { id: "services", label: "Servizi" },
     { id: "database", label: "Database" },
+    { id: "evolution", label: "Evoluzione" },
     { id: "diagrams", label: "Diagrammi" },
     { id: "docs", label: "Documentazione" },
     { id: "search", label: "Ricerca" },
