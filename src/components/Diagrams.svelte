@@ -1,7 +1,7 @@
 <script>
   import mermaid from "mermaid";
   import { store } from "../lib/state.svelte.js";
-  import { generateDiagram, saveTextDialog } from "../lib/api.js";
+  import { generateDiagramFmt, saveTextDialog } from "../lib/api.js";
 
   mermaid.initialize({ startOnLoad: false, theme: "dark", securityLevel: "loose" });
 
@@ -13,29 +13,39 @@
     { id: "sequence", label: "Sequence" },
     { id: "flow", label: "Flusso (cross-layer)" },
   ];
+  const formats = [
+    { id: "mermaid", label: "Mermaid", ext: "mmd" },
+    { id: "plantuml", label: "PlantUML", ext: "puml" },
+    { id: "dot", label: "Graphviz", ext: "dot" },
+  ];
 
   let kind = $state("dependency");
+  let format = $state("mermaid");
   let source = $state("");
   let svg = $state("");
   let error = $state("");
 
-  // Rigenera e disegna il diagramma a ogni cambio di tipo o progetto.
   $effect(() => {
-    render(kind, store.project);
+    render(kind, format, store.project);
   });
 
-  async function render(k, project) {
+  async function render(k, f, project) {
     if (!project) return;
     error = "";
+    svg = "";
     try {
-      source = await generateDiagram(project, k);
-      const { svg: out } = await mermaid.render("graph_" + k, source);
-      svg = out;
+      source = await generateDiagramFmt(project, k, f);
+      if (f === "mermaid") {
+        const { svg: out } = await mermaid.render("graph_" + k, source);
+        svg = out;
+      }
     } catch (e) {
       error = String(e);
-      svg = "";
+      source = "";
     }
   }
+
+  const ext = $derived(formats.find((f) => f.id === format)?.ext ?? "txt");
 </script>
 
 <h1>Diagrammi</h1>
@@ -43,10 +53,20 @@
   {#each kinds as k}
     <button class="chip" class:active={kind === k.id} onclick={() => (kind = k.id)}>{k.label}</button>
   {/each}
-  <button class="chip" onclick={() => saveTextDialog(source, kind + ".mmd")}>Esporta .mmd</button>
+</div>
+<div class="diagram-tabs">
+  {#each formats as f}
+    <button class="chip" class:active={format === f.id} onclick={() => (format = f.id)}>{f.label}</button>
+  {/each}
+  <button class="chip" onclick={() => saveTextDialog(source, kind + "." + ext)}>Esporta .{ext}</button>
 </div>
 
 {#if error}<div class="error">{error}</div>{/if}
 <div class="markdown">
-  {@html svg}
+  {#if format === "mermaid"}
+    {@html svg}
+  {:else}
+    <p class="hint">Sorgente {format} (rendi con uno strumento {format}, o esporta):</p>
+    <pre style="white-space:pre-wrap; overflow:auto">{source}</pre>
+  {/if}
 </div>

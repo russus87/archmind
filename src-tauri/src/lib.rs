@@ -26,10 +26,16 @@ fn generate_markdown(project: Project) -> String {
 }
 
 /// Genera un diagramma Mermaid del tipo richiesto:
-/// "dependency" | "component" | "er" | "class" | "sequence".
+/// "dependency" | "component" | "er" | "class" | "sequence" | "flow".
 #[tauri::command]
 fn generate_diagram(project: Project, kind: String) -> Result<String, String> {
     diagrams::mermaid::render(&project, &kind).map_err(err)
+}
+
+/// Genera un diagramma in un formato specifico ("mermaid" | "plantuml" | "dot").
+#[tauri::command]
+fn generate_diagram_fmt(project: Project, kind: String, format: String) -> Result<String, String> {
+    diagrams::render(&project, &kind, &format).map_err(err)
 }
 
 /// Ricerca full-text semplice sugli elementi del progetto.
@@ -145,6 +151,7 @@ pub fn run() {
             analyze_project,
             generate_markdown,
             generate_diagram,
+            generate_diagram_fmt,
             search_project,
             ask,
             save_text,

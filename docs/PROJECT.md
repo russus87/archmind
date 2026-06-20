@@ -3,8 +3,8 @@
 _Documentazione generata automaticamente da ArchMind._
 
 - **Radice**: `.`
-- **File analizzati**: 97
-- **Righe di codice**: 6608
+- **File analizzati**: 104
+- **Righe di codice**: 7499
 
 ## Composizione
 
@@ -21,11 +21,18 @@ _Documentazione generata automaticamente da ArchMind._
 | `md` | 3 |
 | `mmd` | 6 |
 | `png` | 16 |
-| `rs` | 36 |
+| `rs` | 39 |
 | `svelte` | 9 |
-| `toml` | 4 |
+| `toml` | 5 |
 | `ttf` | 1 |
-| `yml` | 2 |
+| `yml` | 4 |
+
+## Servizi (2)
+
+| Servizio | Immagine | Porte | Dipende da |
+|---|---|---|---|
+| archmind-server | - | 7878:7878 | - |
+| ollama | ollama/ollama:latest | 11434:11434 | - |
 
 ## Dipendenze (11)
 

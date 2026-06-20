@@ -1,0 +1,35 @@
+# Compila il server REST e l'immagine Docker (build di verifica).
+# Indipendente dalla release desktop: il server non richiede webkit.
+name: server
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - "server/**"
+      - "core/**"
+      - "Dockerfile"
+      - ".github/workflows/server.yml"
+  pull_request: {}
+  workflow_dispatch: {}
+
+jobs:
+  build-server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - name: Build & test server + core
+        run: |
+          cargo build -p archmind-server
+          cargo test -p archmind-core
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build immagine Docker del server
+        run: docker build -t archmind-server:ci .

@@ -61,16 +61,41 @@ Il workflow [`.github/workflows/docs.yml`](.github/workflows/docs.yml) esegue
 
 | Area | Fatto | Roadmap |
 |---|---|---|
-| Reverse engineering | C#/Java via **tree-sitter** + call graph, **linking cross-layer** (endpoint→servizio→tabella), deps, servizi, DDL | sidecar Roslyn, altri linguaggi |
+| Reverse engineering | **C#/Java/TypeScript/Python/Go** via tree-sitter + call graph, **linking cross-layer** (endpoint→servizio→tabella), deps, servizi, DDL | sidecar Roslyn, altri linguaggi |
 | Database | DDL su file + **introspezione live PostgreSQL** | Oracle live (Instant Client) |
 | Documentazione | Markdown, **HTML**, **PDF**, **Wiki** + CLI/CI docs-as-code | temi |
-| Diagrammi | Mermaid (6 tipi, incl. **flusso cross-layer**) | PlantUML, Graphviz |
+| Diagrammi | **Mermaid, PlantUML, Graphviz** (6 tipi, incl. flusso cross-layer) | — |
 | Knowledge | ricerca full-text + **RAG ibrido** (BM25 + embeddings locali opz.) con citazioni, Claude/Ollama | — |
 | Evoluzione | **confronto versioni + analisi d'impatto** (snapshot SQLite) | timeline |
-| Persistenza | **progetto/snapshot in `.archmind/store.db`** | cache incrementale |
+| Team / Enterprise | **server REST** (portfolio multi-progetto, auth API-key + RBAC, audit log) + **Docker/Compose** + LLM on-prem (Ollama) | SSO (OIDC/SAML) |
 
 Dettagli completi (architettura, modello dati, API, indicizzazione, AI,
 roadmap MVP→V1→V2→Enterprise): **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
+
+## Server (team / Enterprise)
+
+Oltre al desktop e alla CLI c'è un **server REST** (`archmind-server`) che riusa
+lo stesso core: registro multi-progetto (portfolio), **auth API-key con ruoli**
+(viewer/editor/admin), **audit log**, ed endpoint per analyze, doc, diagram, ask
+(RAG), snapshots e diff.
+
+```bash
+docker compose up -d                      # avvia server (+ Ollama on-prem opz.)
+docker compose logs archmind-server       # mostra la chiave ADMIN iniziale
+# registra un progetto e analizzalo
+curl -X POST localhost:7878/projects -H "x-api-key: $KEY" \
+  -d '{"name":"app","root":"/projects/app"}'
+curl -X POST localhost:7878/projects/1/analyze -H "x-api-key: $KEY"
+curl "localhost:7878/projects/1/doc?format=html" -H "x-api-key: $KEY"
+```
+
+Endpoint principali: `GET /health`, `GET|POST /projects`,
+`POST /projects/:id/analyze`, `GET /projects/:id/doc`,
+`GET /projects/:id/diagram`, `POST /projects/:id/ask`,
+`GET /projects/:id/snapshots`, `GET /projects/:id/diff`, `POST /admin/keys`.
+
+> L'autenticazione è a chiavi API con RBAC; **SSO (OIDC/SAML)** è un passo
+> successivo. L'LLM on-prem è già supportato (provider Ollama).
 
 ## Sviluppo
 

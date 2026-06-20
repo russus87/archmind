@@ -25,6 +25,9 @@ pulldown-cmark = { version = "0.13.4", default-features = false, features = ["ht
 genpdf = "0.2.0"
 postgres = "0.19.14"
 fastembed = { version = "5.17.2", optional = true }
+tree-sitter-typescript = "0.23.2"
+tree-sitter-python = "0.25.0"
+tree-sitter-go = "0.25.0"
 
 [dev-dependencies]
 tempfile = "3"

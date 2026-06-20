@@ -2,5 +2,5 @@
 # Stessa struttura di GlyphBox/Oxiterm: il "core" e' Rust puro e non dipende da Tauri,
 # cosi' tutta l'analisi resta riutilizzabile (anche da una CLI o un server headless).
 [workspace]
-members = ["core", "src-tauri", "cli"]
+members = ["core", "src-tauri", "cli", "server"]
 resolver = "2"

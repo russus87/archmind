@@ -37,6 +37,9 @@ pub struct Project {
 pub enum Language {
     CSharp,
     Java,
+    TypeScript,
+    Python,
+    Go,
     Sql,
     Yaml,
     Json,
