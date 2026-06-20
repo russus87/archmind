@@ -107,6 +107,115 @@ fn estrae_grafo_chiamate_csharp() {
     );
 }
 
+/// Verifica il linking cross-layer: endpoint → componente → tabella.
+#[test]
+fn collega_i_livelli_applicativi() {
+    use archmind_core::model::RelationKind;
+
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+
+    // Controller con metodo listOrders che usa la tabella "orders".
+    fs::write(
+        root.join("OrdersController.cs"),
+        "namespace Shop.Api;\npublic class OrdersController {\n  public void ListOrders() { var q = \"select * from orders\"; }\n}",
+    )
+    .unwrap();
+    // OpenAPI con operationId che combacia col metodo.
+    fs::write(
+        root.join("api.yaml"),
+        "openapi: 3.0.0\npaths:\n  /orders:\n    get:\n      operationId: ListOrders\n",
+    )
+    .unwrap();
+    // DDL con la tabella orders.
+    fs::write(
+        root.join("schema.sql"),
+        "CREATE TABLE orders (id NUMBER PRIMARY KEY);",
+    )
+    .unwrap();
+
+    let p = archmind_core::project::analyze(root.to_str().unwrap()).unwrap();
+
+    // endpoint esposto dal controller (Exposes: componente -> endpoint)
+    assert!(
+        p.relations.iter().any(|r| r.kind == RelationKind::Exposes
+            && r.from == "cs:OrdersController"
+            && r.to.contains("/orders")),
+        "manca il link endpoint <- controller"
+    );
+    // controller che referenzia la tabella orders (References: componente -> tabella)
+    assert!(
+        p.relations.iter().any(|r| r.kind == RelationKind::References
+            && r.from == "cs:OrdersController"
+            && r.to == "table:orders"),
+        "manca il link controller -> tabella"
+    );
+
+    // Il diagramma di flusso deve contenere entrambi i salti.
+    let flow = archmind_core::diagrams::mermaid::render(&p, "flow").unwrap();
+    assert!(flow.contains("OrdersController"), "flow senza controller");
+}
+
+/// Persistenza: salva, elenca e ricarica uno snapshot.
+#[test]
+fn salva_e_ricarica_snapshot() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path().to_str().unwrap();
+    fs::write(dir.path().join("A.cs"), "namespace N;\npublic class A {}").unwrap();
+
+    let p = archmind_core::project::analyze(root).unwrap();
+    let id = archmind_core::store::save_snapshot(root, &p, "v1").unwrap();
+
+    let metas = archmind_core::store::list_snapshots(root).unwrap();
+    assert_eq!(metas.len(), 1);
+    assert_eq!(metas[0].label, "v1");
+
+    let loaded = archmind_core::store::load_snapshot(root, id).unwrap();
+    assert_eq!(loaded.components.len(), p.components.len());
+}
+
+/// Confronto versioni: rileva un componente aggiunto e calcola l'impatto.
+#[test]
+fn confronto_versioni() {
+    let d1 = tempfile::tempdir().unwrap();
+    fs::write(
+        d1.path().join("A.cs"),
+        "namespace N;\npublic class A { public void X() {} }",
+    )
+    .unwrap();
+    let v1 = archmind_core::project::analyze(d1.path().to_str().unwrap()).unwrap();
+
+    let d2 = tempfile::tempdir().unwrap();
+    fs::write(
+        d2.path().join("A.cs"),
+        "namespace N;\npublic class A { public void X() {} }",
+    )
+    .unwrap();
+    fs::write(d2.path().join("B.cs"), "namespace N;\npublic class B {}").unwrap();
+    let v2 = archmind_core::project::analyze(d2.path().to_str().unwrap()).unwrap();
+
+    let cs = archmind_core::evolution::diff(&v1, &v2);
+    assert!(cs.added.iter().any(|c| c.label == "B"), "B non risulta aggiunto");
+    assert!(cs.removed.is_empty(), "non dovrebbero esserci rimozioni");
+}
+
+/// Export: HTML, Wiki (con mermaid) e PDF si generano correttamente.
+#[test]
+fn esporta_html_wiki_pdf() {
+    let dir = tempfile::tempdir().unwrap();
+    fs::write(dir.path().join("A.cs"), "namespace N;\npublic class A {}").unwrap();
+    let p = archmind_core::project::analyze(dir.path().to_str().unwrap()).unwrap();
+
+    let html = archmind_core::docs::html::render(&p);
+    assert!(html.starts_with("<!DOCTYPE html>"), "HTML non valido");
+
+    let wiki = archmind_core::docs::wiki::render(&p);
+    assert!(wiki.contains("```mermaid"), "Wiki senza diagrammi mermaid");
+
+    let pdf = archmind_core::docs::pdf::render(&p).unwrap();
+    assert!(pdf.starts_with(b"%PDF"), "byte PDF non validi");
+}
+
 /// Verifica che l'indice tantivy recuperi passaggi rilevanti (base del RAG).
 #[test]
 fn indice_recupera_passaggi() {

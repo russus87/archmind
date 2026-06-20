@@ -16,12 +16,17 @@
 
 pub mod analyzers;
 pub mod assistant;
+pub mod db;
 pub mod diagrams;
 pub mod docs;
+#[cfg(feature = "embeddings")]
+pub mod embed;
+pub mod evolution;
 pub mod index;
 pub mod model;
 pub mod project;
 pub mod search;
+pub mod store;
 
 /// Errori della libreria.
 #[derive(Debug, thiserror::Error)]
@@ -42,6 +47,12 @@ pub enum Error {
     Index(String),
     #[error("errore dell'assistente LLM: {0}")]
     Llm(String),
+    #[error("serializzazione JSON: {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("errore database/connessione: {0}")]
+    Db(String),
+    #[error("errore di esportazione: {0}")]
+    Export(String),
 }
 
 /// Alias comodo.

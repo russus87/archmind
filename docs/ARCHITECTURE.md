@@ -257,19 +257,22 @@ snapshot(B) ─┘                            ├─ added/removed/modified:
   DDL SQL (tabelle/colonne/FK), dipendenze (NuGet/Maven/npm).
 - Modello unico `Project`; documentazione Markdown; diagrammi Mermaid
   (dependency, component, ER, class con call graph, sequence).
+- **Linking cross-layer** (endpoint → componente → tabella) per il flusso
+  applicativo, con diagramma Mermaid dedicato.
 - **Ricerca full-text + Assistente RAG** (retrieval tantivy + LLM Claude/Ollama,
-  con citazioni alle fonti).
-- **CLI headless** (`archmind-cli`) e **CI docs-as-code** (`check` fallisce sul drift).
+  con citazioni); **RAG ibrido** con embeddings locali ONNX dietro feature flag.
+- **DB live PostgreSQL** (driver `postgres`): introspezione schema/PK/FK.
+- **Export** Markdown, HTML, PDF (genpdf) e Wiki (Markdown+Mermaid).
+- **Persistenza** progetto/snapshot in `.archmind/store.db` (SQLite).
+- **Confronto versioni + analisi d'impatto** sugli snapshot.
+- **CLI headless** (`archmind-cli`: analyze/check/export/ask) e **CI docs-as-code**.
 - UI desktop completa; build CI per Linux/Win/macOS/Arch.
 
-### V1 — Profondità e conoscenza
-- tree-sitter per altri linguaggi (TS/Python/Go) e linking cross-layer
-  (controller → service → tabella) per il flusso applicativo.
-- **Connessione DB live** (PostgreSQL via `tokio-postgres`, Oracle) →
-  introspezione schema, relazioni, analisi query.
-- **Indice vettoriale denso** (embeddings ONNX) accanto al BM25, per RAG ibrido.
-- **Export** HTML e PDF; tema della documentazione.
-- File di progetto SQLite con cache incrementale.
+### V1 — Profondità
+- tree-sitter per altri linguaggi (TS/Python/Go); sidecar Roslyn opzionale.
+- **Oracle live** (richiede Instant Client) accanto al PostgreSQL già supportato.
+- Cache di analisi **incrementale** (hash per file) sul file di progetto.
+- Temi/branding della documentazione esportata.
 
 ### V2 — Evoluzione & integrazioni
 - **Confronto versioni** e **analisi d'impatto** sul grafo (§8).
@@ -298,10 +301,14 @@ archmind/
 │     ├─ project.rs       # orchestrazione dell'analisi
 │     ├─ analyzers/       # git, treesitter (csharp/java), database, openapi,
 │     │                   #   docker_compose, kubernetes, config, deps, stats
-│     ├─ docs/            # generazione documentazione (markdown)
-│     ├─ diagrams/        # generazione diagrammi (mermaid)
+│     ├─ docs/            # documentazione: markdown, html, pdf, wiki
+│     ├─ diagrams/        # generazione diagrammi (mermaid, incl. flow)
 │     ├─ index.rs         # indice full-text tantivy (retrieval RAG)
+│     ├─ embed.rs         # rerank semantico (feature "embeddings", opz.)
 │     ├─ assistant/       # RAG: provider LLM (claude, ollama) + orchestrazione
+│     ├─ db.rs            # introspezione live PostgreSQL
+│     ├─ store.rs         # persistenza SQLite (snapshot)
+│     ├─ evolution.rs     # confronto versioni + analisi d'impatto
 │     └─ search.rs        # ricerca full-text semplice (live, in UI)
 ├─ cli/                   # archmind-cli: analyze / check (docs-as-code) / ask
 ├─ src-tauri/             # backend Tauri (adattatori) + config + icone

@@ -46,8 +46,13 @@ core, pensata per la CI:
 ```bash
 archmind-cli analyze . --out docs --diagrams   # genera documentazione + diagrammi
 archmind-cli check   . --out docs              # gate CI: fallisce se la doc è in drift
+archmind-cli export  . --format pdf --out doc.pdf   # export md|html|wiki|pdf
 archmind-cli ask     . --question "come funziona X?"   # assistente RAG da terminale
 ```
+
+Il retrieval semantico locale (embeddings ONNX) è opzionale, dietro feature flag
+per mantenere puro-Rust la build di default:
+`cargo build --features embeddings` (la chat diventa BM25 + semantico).
 
 Il workflow [`.github/workflows/docs.yml`](.github/workflows/docs.yml) esegue
 `check` a ogni push: la documentazione resta sempre allineata al codice.
@@ -56,11 +61,13 @@ Il workflow [`.github/workflows/docs.yml`](.github/workflows/docs.yml) esegue
 
 | Area | Fatto | Roadmap |
 |---|---|---|
-| Reverse engineering | C#/Java via **tree-sitter** + call graph, deps, servizi, DDL | DB live, sidecar Roslyn |
-| Documentazione | Markdown + **CLI/CI docs-as-code** | HTML, PDF, Wiki |
-| Diagrammi | Mermaid (5 tipi) | PlantUML, Graphviz |
-| Knowledge | **ricerca full-text + RAG con citazioni** (Claude/Ollama) | indice vettoriale denso |
-| Evoluzione | — | confronto versioni, analisi d'impatto |
+| Reverse engineering | C#/Java via **tree-sitter** + call graph, **linking cross-layer** (endpoint→servizio→tabella), deps, servizi, DDL | sidecar Roslyn, altri linguaggi |
+| Database | DDL su file + **introspezione live PostgreSQL** | Oracle live (Instant Client) |
+| Documentazione | Markdown, **HTML**, **PDF**, **Wiki** + CLI/CI docs-as-code | temi |
+| Diagrammi | Mermaid (6 tipi, incl. **flusso cross-layer**) | PlantUML, Graphviz |
+| Knowledge | ricerca full-text + **RAG ibrido** (BM25 + embeddings locali opz.) con citazioni, Claude/Ollama | — |
+| Evoluzione | **confronto versioni + analisi d'impatto** (snapshot SQLite) | timeline |
+| Persistenza | **progetto/snapshot in `.archmind/store.db`** | cache incrementale |
 
 Dettagli completi (architettura, modello dati, API, indicizzazione, AI,
 roadmap MVP→V1→V2→Enterprise): **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.

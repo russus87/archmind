@@ -42,3 +42,36 @@ export async function saveTextDialog(content, defaultName) {
   await invoke("save_text", { path, content });
   return true;
 }
+
+/// Esporta la documentazione (md|html|wiki|pdf) chiedendo dove salvarla.
+export async function exportDoc(project, format, defaultName) {
+  const path = await save({ defaultPath: defaultName });
+  if (!path) return false;
+  await invoke("export_doc", { project, format, path });
+  return true;
+}
+
+/// Salva uno snapshot del progetto con un'etichetta.
+export async function saveSnapshot(project, label) {
+  return await invoke("save_snapshot", { project, label });
+}
+
+/// Elenca gli snapshot salvati per la cartella radice.
+export async function listSnapshots(root) {
+  return await invoke("list_snapshots", { root });
+}
+
+/// Confronta due snapshot per id.
+export async function diffSnapshots(root, a, b) {
+  return await invoke("diff_snapshots", { root, a, b });
+}
+
+/// Confronta uno snapshot con lo stato attuale del progetto.
+export async function diffAgainstCurrent(snapshotId, current) {
+  return await invoke("diff_against_current", { snapshotId, current });
+}
+
+/// Introspezione live di un database PostgreSQL.
+export async function connectDatabase(project, dsn, schema) {
+  return await invoke("connect_database", { project, dsn, schema: schema || null });
+}

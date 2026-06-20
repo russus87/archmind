@@ -113,8 +113,11 @@ pub fn retrieve(project: &Project, query: &str, k: usize) -> Result<Vec<Passage>
         .parse_query(cleaned.trim())
         .map_err(|e| Error::Index(e.to_string()))?;
 
+    // Con il retrieval semantico recuperiamo più candidati lessicali e poi li
+    // riordiniamo; senza, basta il top-k BM25.
+    let limit = if cfg!(feature = "embeddings") { k.saturating_mul(4).max(k) } else { k };
     let top = searcher
-        .search(&q, &TopDocs::with_limit(k).order_by_score())
+        .search(&q, &TopDocs::with_limit(limit).order_by_score())
         .map_err(|e| Error::Index(e.to_string()))?;
 
     let get = |doc: &TantivyDocument, field| {
@@ -137,5 +140,18 @@ pub fn retrieve(project: &Project, query: &str, k: usize) -> Result<Vec<Passage>
             snippet: body.chars().take(1200).collect(),
         });
     }
-    Ok(out)
+    Ok(finalize(out, query, k))
+}
+
+/// Con la feature `embeddings`: riordina i candidati per similarità semantica.
+#[cfg(feature = "embeddings")]
+fn finalize(out: Vec<Passage>, query: &str, k: usize) -> Vec<Passage> {
+    crate::embed::rerank(query, out, k)
+}
+
+/// Senza la feature: si tengono i primi `k` candidati lessicali (BM25).
+#[cfg(not(feature = "embeddings"))]
+fn finalize(mut out: Vec<Passage>, _query: &str, k: usize) -> Vec<Passage> {
+    out.truncate(k);
+    out
 }

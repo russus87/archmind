@@ -16,7 +16,7 @@ use std::process::exit;
 
 /// File di documentazione generato (confrontato dal comando `check`).
 const DOC_FILE: &str = "PROJECT.md";
-const DIAGRAM_KINDS: &[&str] = &["dependency", "component", "er", "class", "sequence"];
+const DIAGRAM_KINDS: &[&str] = &["dependency", "component", "er", "class", "sequence", "flow"];
 
 #[derive(Parser)]
 #[command(
@@ -54,6 +54,17 @@ enum Cmd {
         #[arg(long, default_value = "docs")]
         out: String,
     },
+    /// Esporta la documentazione in un formato specifico.
+    Export {
+        /// Cartella radice del progetto.
+        path: String,
+        /// Formato: md | html | wiki | pdf.
+        #[arg(long, default_value = "html")]
+        format: String,
+        /// File di output.
+        #[arg(long)]
+        out: String,
+    },
     /// Pone una domanda all'assistente RAG sul progetto.
     Ask {
         /// Cartella radice del progetto.
@@ -86,6 +97,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             json,
         } => analyze(&path, &out, diagrams, json),
         Cmd::Check { path, out } => check(&path, &out),
+        Cmd::Export { path, format, out } => export(&path, &format, &out),
         Cmd::Ask {
             path,
             question,
@@ -140,6 +152,20 @@ fn check(path: &str, out: &str) -> Result<(), Box<dyn Error>> {
         );
         exit(1);
     }
+}
+
+/// Esporta la documentazione nel formato richiesto.
+fn export(path: &str, format: &str, out: &str) -> Result<(), Box<dyn Error>> {
+    let project = project::analyze(path)?;
+    match format {
+        "md" => fs::write(out, docs::markdown::render(&project))?,
+        "html" => fs::write(out, docs::html::render(&project))?,
+        "wiki" => fs::write(out, docs::wiki::render(&project))?,
+        "pdf" => fs::write(out, docs::pdf::render(&project)?)?,
+        other => return Err(format!("formato non supportato: {other}").into()),
+    }
+    println!("scritto {out}");
+    Ok(())
 }
 
 /// Assistente RAG da terminale.

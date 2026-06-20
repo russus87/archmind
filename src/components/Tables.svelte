@@ -1,9 +1,29 @@
 <script>
   import { store } from "../lib/state.svelte.js";
+  import { connectDatabase } from "../lib/api.js";
 
   // Vista tabellare riusata per Componenti / API / Servizi / Database.
   let { kind } = $props();
   const p = $derived(store.project);
+
+  // Connessione live a PostgreSQL (introspezione schema).
+  let dsn = $state("host=localhost user=postgres dbname=postgres");
+  let schema = $state("");
+  let dbBusy = $state(false);
+  let dbMsg = $state("");
+
+  async function connect() {
+    dbBusy = true;
+    dbMsg = "";
+    try {
+      store.project = await connectDatabase(store.project, dsn, schema);
+      dbMsg = `Introspezione completata: ${store.project.tables.length} tabelle.`;
+    } catch (e) {
+      dbMsg = String(e);
+    } finally {
+      dbBusy = false;
+    }
+  }
 </script>
 
 {#if kind === "components"}
@@ -38,6 +58,15 @@
   </table>
 {:else if kind === "database"}
   <h1>Database ({p.tables.length} tabelle)</h1>
+  <div class="markdown" style="margin-bottom:18px">
+    <p class="hint">Connessione live PostgreSQL (introspezione dello schema). In alternativa, le tabelle vengono ricavate dai file DDL <code>.sql</code>.</p>
+    <div class="toolbar">
+      <input class="search" type="text" placeholder="DSN (es. host=localhost user=postgres dbname=app)" bind:value={dsn} />
+      <input class="search" type="text" placeholder="schema (opz.)" bind:value={schema} style="max-width:160px" />
+      <button class="btn" onclick={connect} disabled={dbBusy}>{dbBusy ? "Connessione…" : "Connetti"}</button>
+    </div>
+    {#if dbMsg}<p class="hint">{dbMsg}</p>{/if}
+  </div>
   {#each p.tables as t}
     <h2>{t.schema ? t.schema + "." : ""}{t.name}</h2>
     <table>
