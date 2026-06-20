@@ -1,0 +1,35 @@
+# Docs-as-code: rigenera la documentazione dal sorgente e fa fallire la build
+# se quella committata (docs/PROJECT.md) è andata in drift.
+# Gira solo la CLI (archmind-cli), che dipende dal solo "core": niente webkit,
+# build rapida.
+name: docs-as-code
+
+on:
+  push:
+    branches: ["**"]
+  pull_request: {}
+  workflow_dispatch: {}
+
+jobs:
+  docs-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Verifica drift della documentazione
+        run: cargo run -p archmind-cli -- check . --out docs
+
+      # Se il check fallisce, mostra come rigenerare.
+      - name: Suggerimento in caso di drift
+        if: failure()
+        run: |
+          echo "::error::La documentazione è disallineata dal codice."
+          echo "Rigenerala in locale con:"
+          echo "  cargo run -p archmind-cli -- analyze . --out docs --diagrams"
+          echo "e committa le modifiche in docs/."

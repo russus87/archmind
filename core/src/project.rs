@@ -4,8 +4,8 @@
 use crate::analyzers;
 use crate::model::{Project, RelationKind, Relation};
 use crate::Result;
+use ignore::WalkBuilder;
 use std::path::Path;
-use walkdir::WalkDir;
 
 /// Cartelle da ignorare durante la scansione (rumore o artefatti di build).
 const SKIP_DIRS: &[&str] = &[
@@ -33,13 +33,24 @@ pub fn analyze(root: &str) -> Result<Project> {
     let mut project = Project::new(root, name);
 
     // Raccoglie tutti i file una volta sola e li passa agli analyzer.
-    let files: Vec<_> = WalkDir::new(root_path)
-        .into_iter()
+    // Rispetta `.gitignore` (via la crate `ignore`): si analizza ciò che è
+    // versionato, non gli artefatti di build (target/, gen/, node_modules/...).
+    // `hidden(false)` mantiene i dotfile utili (.env, appsettings).
+    // L'ordinamento rende l'analisi — e quindi la documentazione generata —
+    // deterministica a prescindere dal filesystem: indispensabile per il
+    // confronto "docs-as-code" in CI.
+    let mut files: Vec<_> = WalkBuilder::new(root_path)
+        .hidden(false)
+        .git_ignore(true)
+        .git_global(false)
+        .require_git(false)
         .filter_entry(|e| !is_skipped(e.path()))
-        .filter_map(|e| e.ok())
-        .filter(|e| e.file_type().is_file())
+        .build()
+        .filter_map(|r| r.ok())
+        .filter(|e| e.file_type().map(|t| t.is_file()).unwrap_or(false))
         .map(|e| e.into_path())
         .collect();
+    files.sort();
 
     analyzers::stats::collect(&mut project, &files);
     analyzers::git::collect(&mut project, root_path);

@@ -1,0 +1,18 @@
+# CLI headless di ArchMind: stessa logica del desktop (archmind-core), senza
+# Tauri. Pensata per le pipeline CI ("docs-as-code"): rigenera la documentazione
+# a ogni push e fa fallire la build se la doc è andata in drift.
+[package]
+name = "archmind-cli"
+version = "0.1.0"
+edition = "2021"
+description = "CLI di ArchMind per analisi e documentazione in CI"
+license = "MIT"
+
+[[bin]]
+name = "archmind-cli"
+path = "src/main.rs"
+
+[dependencies]
+archmind-core = { path = "../core" }
+clap = { version = "4", features = ["derive"] }
+serde_json = "1"

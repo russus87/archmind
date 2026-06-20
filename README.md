@@ -20,7 +20,8 @@ AI cloud sono opt-in).
 
 - **Repository Git** — metadati del repo
 - **C#** (`.cs`, `.csproj`) e **Java** (`.java`, `pom.xml`, Gradle) — namespace,
-  package, classi, interfacce, metodi, dipendenze
+  package, classi, interfacce, metodi e **grafo delle chiamate** (parsing reale
+  via [tree-sitter](https://tree-sitter.github.io))
 - **Database** — DDL SQL (Oracle/PostgreSQL): tabelle, colonne, chiavi esterne
 - **OpenAPI / Swagger** — endpoint (metodo, path, operationId)
 - **Docker Compose** — servizi, immagini, porte, `depends_on`
@@ -31,18 +32,34 @@ AI cloud sono opt-in).
 ## Cosa genera
 
 - **Documentazione** Markdown (HTML/PDF/Wiki in roadmap)
-- **Diagrammi** Mermaid: dependency graph, component, **ER**, class diagram, sequence
+- **Diagrammi** Mermaid: dependency graph, component, **ER**, class diagram (con
+  archi delle chiamate), sequence
 - **Ricerca** full-text su tutto il progetto
-- **Assistente** (RAG, da V1): chat con il progetto
+- **Assistente RAG**: chat con il progetto (retrieval [tantivy](https://github.com/quickwit-oss/tantivy)
+  + LLM **Claude** o **Ollama** locale), con citazioni alle fonti
 
-## Funzionalità (MVP / roadmap)
+## CLI & docs-as-code
 
-| Area | MVP | Roadmap |
+Oltre al desktop c'è una **CLI headless** (`archmind-cli`) che riusa lo stesso
+core, pensata per la CI:
+
+```bash
+archmind-cli analyze . --out docs --diagrams   # genera documentazione + diagrammi
+archmind-cli check   . --out docs              # gate CI: fallisce se la doc è in drift
+archmind-cli ask     . --question "come funziona X?"   # assistente RAG da terminale
+```
+
+Il workflow [`.github/workflows/docs.yml`](.github/workflows/docs.yml) esegue
+`check` a ogni push: la documentazione resta sempre allineata al codice.
+
+## Funzionalità (fatto / roadmap)
+
+| Area | Fatto | Roadmap |
 |---|---|---|
-| Reverse engineering | C#/Java euristici, deps, servizi, DDL | tree-sitter, DB live, Roslyn |
-| Documentazione | Markdown | HTML, PDF, Wiki |
+| Reverse engineering | C#/Java via **tree-sitter** + call graph, deps, servizi, DDL | DB live, sidecar Roslyn |
+| Documentazione | Markdown + **CLI/CI docs-as-code** | HTML, PDF, Wiki |
 | Diagrammi | Mermaid (5 tipi) | PlantUML, Graphviz |
-| Knowledge | ricerca full-text | indicizzazione + RAG con citazioni |
+| Knowledge | **ricerca full-text + RAG con citazioni** (Claude/Ollama) | indice vettoriale denso |
 | Evoluzione | — | confronto versioni, analisi d'impatto |
 
 Dettagli completi (architettura, modello dati, API, indicizzazione, AI,

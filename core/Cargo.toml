@@ -11,11 +11,15 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 # YAML per Docker Compose, manifest Kubernetes e OpenAPI in formato yaml.
 serde_yaml = "0.9"
-# Attraversamento ricorsivo della cartella di progetto.
-walkdir = "2"
 # Estrazione euristica di simboli (classi, package, import, DDL) dal sorgente.
 regex = "1"
 thiserror = "2"
+tree-sitter = "0.26.9"
+tree-sitter-c-sharp = "0.23.5"
+tree-sitter-java = "0.23.5"
+tantivy = "0.26.1"
+ureq = { version = "3.3.0", features = ["json"] }
+ignore = "0.4.26"
 
 [dev-dependencies]
 tempfile = "3"

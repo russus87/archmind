@@ -29,6 +29,12 @@ export async function searchProject(project, query) {
   return await invoke("search_project", { project, query });
 }
 
+/// Assistente RAG: pone una domanda sul progetto.
+/// `provider` è { kind: "claude", api_key, model } oppure { kind: "ollama", host, model }.
+export async function ask(project, question, provider) {
+  return await invoke("ask", { project, question, provider });
+}
+
 /// Salva del testo su file, chiedendo il percorso all'utente.
 export async function saveTextDialog(content, defaultName) {
   const path = await save({ defaultPath: defaultName });

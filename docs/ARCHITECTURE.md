@@ -147,8 +147,8 @@ Il contratto tra UI e core. Ogni comando è un adattatore sottile.
 | `save_text` | `path, content` | `()` | ✅ MVP |
 | `export_html` / `export_pdf` | `project, opts` | file | 🔜 V1 |
 | `connect_database` | `dsn, kind` | `Table[]` (introspezione live) | 🔜 V1 |
-| `index_project` | `root` | `()` (tantivy + embeddings) | 🔜 V1 |
-| `ask` | `query, opts` | stream risposta RAG | 🔜 V1 |
+| `ask` | `project, question, provider` | `Answer` (testo + citazioni) | ✅ MVP |
+| `index_project` (interno) | `project, query` | passaggi rilevanti (tantivy) | ✅ MVP |
 | `diff_snapshots` | `a, b` | `ChangeSet` (impatto) | 🔜 V2 |
 
 `kind` dei diagrammi: `dependency | component | er | class | sequence`.
@@ -251,19 +251,23 @@ snapshot(B) ─┘                            ├─ added/removed/modified:
 ## 10. Roadmap
 
 ### MVP (questa base) ✅
-- Scansione progetto multipiattaforma con skip degli artefatti.
-- Analyzer: Git (metadati), C# e Java (euristici), OpenAPI/Swagger, Docker
-  Compose, Kubernetes, file di config, DDL SQL (tabelle/colonne/FK),
-  dipendenze (NuGet/Maven/npm).
+- Scansione progetto multipiattaforma, deterministica, con skip degli artefatti.
+- Analyzer: Git (metadati), **C# e Java via tree-sitter** (tipi, metodi e grafo
+  delle chiamate), OpenAPI/Swagger, Docker Compose, Kubernetes, file di config,
+  DDL SQL (tabelle/colonne/FK), dipendenze (NuGet/Maven/npm).
 - Modello unico `Project`; documentazione Markdown; diagrammi Mermaid
-  (dependency, component, ER, class, sequence); ricerca full-text semplice.
+  (dependency, component, ER, class con call graph, sequence).
+- **Ricerca full-text + Assistente RAG** (retrieval tantivy + LLM Claude/Ollama,
+  con citazioni alle fonti).
+- **CLI headless** (`archmind-cli`) e **CI docs-as-code** (`check` fallisce sul drift).
 - UI desktop completa; build CI per Linux/Win/macOS/Arch.
 
 ### V1 — Profondità e conoscenza
-- **tree-sitter** per C#/Java/TS/Python (simboli, chiamate, import precisi).
+- tree-sitter per altri linguaggi (TS/Python/Go) e linking cross-layer
+  (controller → service → tabella) per il flusso applicativo.
 - **Connessione DB live** (PostgreSQL via `tokio-postgres`, Oracle) →
   introspezione schema, relazioni, analisi query.
-- **Indicizzazione** tantivy + embeddings; **Assistente RAG** con citazioni.
+- **Indice vettoriale denso** (embeddings ONNX) accanto al BM25, per RAG ibrido.
 - **Export** HTML e PDF; tema della documentazione.
 - File di progetto SQLite con cache incrementale.
 
@@ -292,11 +296,14 @@ archmind/
 │  └─ src/
 │     ├─ model.rs         # il grafo di conoscenza (Project)
 │     ├─ project.rs       # orchestrazione dell'analisi
-│     ├─ analyzers/       # git, csharp, java, database, openapi,
+│     ├─ analyzers/       # git, treesitter (csharp/java), database, openapi,
 │     │                   #   docker_compose, kubernetes, config, deps, stats
 │     ├─ docs/            # generazione documentazione (markdown)
 │     ├─ diagrams/        # generazione diagrammi (mermaid)
-│     └─ search.rs        # ricerca (full-text → tantivy in V1)
+│     ├─ index.rs         # indice full-text tantivy (retrieval RAG)
+│     ├─ assistant/       # RAG: provider LLM (claude, ollama) + orchestrazione
+│     └─ search.rs        # ricerca full-text semplice (live, in UI)
+├─ cli/                   # archmind-cli: analyze / check (docs-as-code) / ask
 ├─ src-tauri/             # backend Tauri (adattatori) + config + icone
 ├─ src/                   # frontend Svelte 5
 ├─ packaging/             # PKGBUILD + .desktop per Arch Linux

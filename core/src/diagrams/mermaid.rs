@@ -122,6 +122,15 @@ fn class(p: &Project) -> String {
     if count == 0 {
         let _ = writeln!(s, "  class NessunaClasse");
     }
+
+    // Archi delle chiamate tra tipi (dal grafo Calls), risolti a nome classe.
+    let by_id: std::collections::HashMap<&str, &str> =
+        p.components.iter().map(|c| (c.id.as_str(), c.name.as_str())).collect();
+    for r in p.relations.iter().filter(|r| matches!(r.kind, RelationKind::Calls)) {
+        if let (Some(from), Some(to)) = (by_id.get(r.from.as_str()), by_id.get(r.to.as_str())) {
+            let _ = writeln!(s, "  {} ..> {} : calls", id(from), id(to));
+        }
+    }
     s
 }
 
