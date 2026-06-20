@@ -24,6 +24,11 @@ export async function generateDiagram(project, kind) {
   return await invoke("generate_diagram", { project, kind });
 }
 
+/// Genera un diagramma in un formato specifico (mermaid|plantuml|dot).
+export async function generateDiagramFmt(project, kind, format) {
+  return await invoke("generate_diagram_fmt", { project, kind, format });
+}
+
 /// Ricerca full-text sugli elementi del progetto.
 export async function searchProject(project, query) {
   return await invoke("search_project", { project, query });

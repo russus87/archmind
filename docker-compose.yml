@@ -1,0 +1,33 @@
+# Deploy di team del server ArchMind, con LLM on-prem (Ollama) opzionale.
+#
+# - i repository da analizzare vanno montati sotto /projects e registrati con
+#   quel percorso (es. POST /projects {"root":"/projects/mio-repo"});
+# - la chiave ADMIN iniziale viene stampata nei log al primo avvio
+#   (docker compose logs archmind-server);
+# - per la chat RAG on-prem, usa provider Ollama con host http://ollama:11434.
+services:
+  archmind-server:
+    build: .
+    ports:
+      - "7878:7878"
+    volumes:
+      - archmind-data:/data
+      - ./:/projects/archmind:ro   # esempio: monta questo repo come progetto
+    environment:
+      ARCHMIND_ADDR: 0.0.0.0:7878
+      ARCHMIND_DB: /data/archmind-server.db
+    restart: unless-stopped
+
+  # LLM locale per la chat RAG (on-prem). Scarica un modello con:
+  #   docker compose exec ollama ollama pull qwen2.5-coder:7b
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+
+volumes:
+  archmind-data:
+  ollama-data:

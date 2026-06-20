@@ -268,26 +268,23 @@ snapshot(B) ─┘                            ├─ added/removed/modified:
 - **CLI headless** (`archmind-cli`: analyze/check/export/ask) e **CI docs-as-code**.
 - UI desktop completa; build CI per Linux/Win/macOS/Arch.
 
-### V1 — Profondità
-- tree-sitter per altri linguaggi (TS/Python/Go); sidecar Roslyn opzionale.
+### V2 — Profondità & integrazioni ✅
+- tree-sitter per **TypeScript / Python / Go** oltre a C#/Java.
+- Diagrammi **PlantUML** e **Graphviz (DOT)** oltre a Mermaid.
+- Confronto versioni e analisi d'impatto (vedi sopra), export Wiki, docs-as-code.
+
+### Enterprise — fondazione ✅
+- **Server REST headless** (`archmind-server`, axum) con lo stesso core: registro
+  **multi-progetto** (portfolio), endpoint analyze/doc/diagram/ask/diff/snapshots.
+- **Auth API-key + RBAC** (viewer/editor/admin) e **audit log** su SQLite.
+- **Docker + Compose** per il deploy di team; **LLM on-prem** (Ollama).
+- CI dedicata (`server.yml`): build del server + immagine Docker.
+
+### Residuo (V1.x / Enterprise+)
+- **SSO** (OIDC/SAML) e policy RBAC avanzate; data residency; SLA.
 - **Oracle live** (richiede Instant Client) accanto al PostgreSQL già supportato.
-- Cache di analisi **incrementale** (hash per file) sul file di progetto.
-- Temi/branding della documentazione esportata.
-
-### V2 — Evoluzione & integrazioni
-- **Confronto versioni** e **analisi d'impatto** sul grafo (§8).
-- Export verso **Wiki** (Confluence, Azure DevOps, GitHub/GitLab Wiki).
-- Analisi semantica C# via **sidecar Roslyn** opzionale; Java via JavaParser.
-- Diagrammi **PlantUML** e **Graphviz (DOT)**; viste filtrabili.
-- CLI headless per pipeline CI ("docs-as-code": doc rigenerata a ogni push).
-
-### Enterprise
-- **Server / modalità team** headless con lo stesso core: analisi centralizzata,
-  doc pubblicata su portale interno, API REST.
-- **SSO/RBAC**, multi-repo e multi-progetto, dashboard di portfolio.
-- **Integrazione CI/CD** (gate su drift di documentazione), webhook.
-- LLM **on-prem** (vLLM/Ollama in cluster) per ambienti regolamentati.
-- Audit log, policy di data residency, supporto e SLA.
+- Cache di analisi **incrementale** (hash per file); sidecar Roslyn/JavaParser.
+- Webhook CI/CD, dashboard di portfolio, temi/branding dell'export.
 
 ---
 
@@ -299,10 +296,10 @@ archmind/
 │  └─ src/
 │     ├─ model.rs         # il grafo di conoscenza (Project)
 │     ├─ project.rs       # orchestrazione dell'analisi
-│     ├─ analyzers/       # git, treesitter (csharp/java), database, openapi,
-│     │                   #   docker_compose, kubernetes, config, deps, stats
+│     ├─ analyzers/       # git, treesitter (c#/java/ts/python/go), database,
+│     │                   #   openapi, docker_compose, kubernetes, config, deps, stats
 │     ├─ docs/            # documentazione: markdown, html, pdf, wiki
-│     ├─ diagrams/        # generazione diagrammi (mermaid, incl. flow)
+│     ├─ diagrams/        # diagrammi: mermaid, plantuml, dot (incl. flow)
 │     ├─ index.rs         # indice full-text tantivy (retrieval RAG)
 │     ├─ embed.rs         # rerank semantico (feature "embeddings", opz.)
 │     ├─ assistant/       # RAG: provider LLM (claude, ollama) + orchestrazione
@@ -310,10 +307,12 @@ archmind/
 │     ├─ store.rs         # persistenza SQLite (snapshot)
 │     ├─ evolution.rs     # confronto versioni + analisi d'impatto
 │     └─ search.rs        # ricerca full-text semplice (live, in UI)
-├─ cli/                   # archmind-cli: analyze / check (docs-as-code) / ask
+├─ cli/                   # archmind-cli: analyze / check / export / ask
+├─ server/                # archmind-server: REST (axum) portfolio + auth + audit
 ├─ src-tauri/             # backend Tauri (adattatori) + config + icone
 ├─ src/                   # frontend Svelte 5
 ├─ packaging/             # PKGBUILD + .desktop per Arch Linux
-├─ .github/workflows/     # release.yml (build multipiattaforma)
+├─ Dockerfile · docker-compose.yml   # deploy del server (+ Ollama on-prem)
+├─ .github/workflows/     # release · docs-as-code · server
 └─ docs/ARCHITECTURE.md   # questo documento
 ```

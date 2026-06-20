@@ -58,6 +58,9 @@ pub fn analyze(root: &str) -> Result<Project> {
     analyzers::deps::collect(&mut project, root, &files);
     analyzers::csharp::collect(&mut project, root, &files);
     analyzers::java::collect(&mut project, root, &files);
+    analyzers::treesitter::collect(&mut project, root, &files, analyzers::treesitter::Lang::TypeScript);
+    analyzers::treesitter::collect(&mut project, root, &files, analyzers::treesitter::Lang::Python);
+    analyzers::treesitter::collect(&mut project, root, &files, analyzers::treesitter::Lang::Go);
     analyzers::openapi::collect(&mut project, root, &files);
     analyzers::docker_compose::collect(&mut project, root, &files);
     analyzers::kubernetes::collect(&mut project, root, &files);

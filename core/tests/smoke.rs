@@ -156,6 +156,59 @@ fn collega_i_livelli_applicativi() {
     assert!(flow.contains("OrdersController"), "flow senza controller");
 }
 
+/// Export diagrammi anche in PlantUML e Graphviz (DOT).
+#[test]
+fn esporta_diagrammi_plantuml_dot() {
+    let dir = tempfile::tempdir().unwrap();
+    fs::write(
+        dir.path().join("A.cs"),
+        "namespace N;\npublic class A { public void X() {} }",
+    )
+    .unwrap();
+    let p = archmind_core::project::analyze(dir.path().to_str().unwrap()).unwrap();
+
+    let puml = archmind_core::diagrams::render(&p, "class", "plantuml").unwrap();
+    assert!(puml.contains("@startuml"), "PlantUML non valido");
+    let dot = archmind_core::diagrams::render(&p, "dependency", "dot").unwrap();
+    assert!(dot.contains("digraph"), "DOT non valido");
+}
+
+/// tree-sitter multi-linguaggio: estrae classi da TypeScript, Python e Go.
+#[test]
+fn estrae_typescript_python_go() {
+    use archmind_core::model::Language;
+    let dir = tempfile::tempdir().unwrap();
+    fs::write(
+        dir.path().join("svc.ts"),
+        "export class UserService { getUser(): number { return 1; } }",
+    )
+    .unwrap();
+    fs::write(
+        dir.path().join("app.py"),
+        "class App:\n    def run(self):\n        return 1\n",
+    )
+    .unwrap();
+    fs::write(
+        dir.path().join("server.go"),
+        "package main\ntype Server struct { port int }\n",
+    )
+    .unwrap();
+
+    let p = archmind_core::project::analyze(dir.path().to_str().unwrap()).unwrap();
+    assert!(
+        p.components.iter().any(|c| c.name == "UserService" && c.language == Language::TypeScript),
+        "manca classe TypeScript"
+    );
+    assert!(
+        p.components.iter().any(|c| c.name == "App" && c.language == Language::Python),
+        "manca classe Python"
+    );
+    assert!(
+        p.components.iter().any(|c| c.name == "Server" && c.language == Language::Go),
+        "manca tipo Go"
+    );
+}
+
 /// Persistenza: salva, elenca e ricarica uno snapshot.
 #[test]
 fn salva_e_ricarica_snapshot() {
